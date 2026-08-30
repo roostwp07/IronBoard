@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",           // modern JS features Node supports
+    "module": "NodeNext",         // use Node's native module resolution
+    "moduleResolution": "NodeNext",
+    "outDir": "./dist",           // compiled .js output goes here
+    "rootDir": "./src",           // our source .ts files live here
+    "strict": true,               // catch as many mistakes as possible
+    "allowImportingTsExtensions": true,        // let imports use .ts (matches our source)
+    "rewriteRelativeImportExtensions": true,   // emit .js in place of .ts on build
+    "esModuleInterop": true,      // smooth interop with CommonJS packages
+    "skipLibCheck": true,         // don't type-check node_modules (faster)
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/**/*"]
+}
