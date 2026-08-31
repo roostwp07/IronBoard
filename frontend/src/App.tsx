@@ -6,6 +6,7 @@ import LoginPage from "./pages/LoginPage";
 import LeaderboardPage from "./pages/LeaderboardPage";
 import AdminPage from "./pages/AdminPage";
 import LogLiftPage from "./pages/LogLiftPage";
+import FeedPage from "./pages/FeedPage";
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
+          <Route path="/feed" element={<FeedPage />} />
 
           {/* Member-only routes */}
           <Route path="/log-lift" element={
