@@ -1,8 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
 import LeaderboardPage from "./pages/LeaderboardPage";
+import AdminPage from "./pages/AdminPage";
+import LogLiftPage from "./pages/LogLiftPage";
 
 export default function App() {
   return (
@@ -11,9 +14,21 @@ export default function App() {
       {/* BrowserRouter enables URL-based navigation throughout the app. */}
       <BrowserRouter>
         <Routes>
+          {/* Public routes */}
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
+
+          {/* Member-only routes */}
+          <Route path="/log-lift" element={
+            <ProtectedRoute><LogLiftPage /></ProtectedRoute>
+          } />
+
+          {/* Admin-only routes */}
+          <Route path="/admin" element={
+            <ProtectedRoute adminOnly><AdminPage /></ProtectedRoute>
+          } />
+
           {/* Any unknown URL redirects to the leaderboard. */}
           <Route path="*" element={<Navigate to="/leaderboard" replace />} />
         </Routes>

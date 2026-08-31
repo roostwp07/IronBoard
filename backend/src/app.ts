@@ -1,6 +1,8 @@
 import express from "express";
 import { authRouter } from "./routes/auth.ts";
 import { leaderboardRouter } from "./routes/leaderboard.ts";
+import { adminRouter } from "./routes/admin.ts";
+import { liftsRouter } from "./routes/lifts.ts";
 
 // Build the Express app but do NOT start listening here. Tests import
 // this `app` and run requests against it in-memory (via supertest),
@@ -20,3 +22,9 @@ app.use("/api/auth", authRouter);
 
 // Leaderboard: /api/leaderboard
 app.use("/api/leaderboard", leaderboardRouter);
+
+// Admin: /api/admin/users/pending, /api/admin/users/:id/approve, etc.
+app.use("/api/admin", adminRouter);
+
+// Lifts: /api/lifts/submit, /api/lifts/pending, etc.
+app.use("/api/lifts", liftsRouter);
