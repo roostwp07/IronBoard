@@ -1,5 +1,6 @@
 import express from "express";
 import { authRouter } from "./routes/auth.ts";
+import { leaderboardRouter } from "./routes/leaderboard.ts";
 
 // Build the Express app but do NOT start listening here. Tests import
 // this `app` and run requests against it in-memory (via supertest),
@@ -16,3 +17,6 @@ app.get("/health", (_req, res) => {
 
 // Auth routes: /api/auth/register, /api/auth/login
 app.use("/api/auth", authRouter);
+
+// Leaderboard: /api/leaderboard
+app.use("/api/leaderboard", leaderboardRouter);
