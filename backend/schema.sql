@@ -39,21 +39,3 @@ CREATE TABLE IF NOT EXISTS post_media (
   post_id   INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
   media_url TEXT NOT NULL
 );
-
-CREATE TABLE IF NOT EXISTS meals (
-  id         SERIAL PRIMARY KEY,
-  user_id    INTEGER NOT NULL REFERENCES users(id),
-  food_name  TEXT NOT NULL,
-  calories   DECIMAL,
-  protein_g  DECIMAL,
-  carbs_g    DECIMAL,
-  fat_g      DECIMAL,
-  logged_at  TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS bodyweight_entries (
-  id         SERIAL PRIMARY KEY,
-  user_id    INTEGER NOT NULL REFERENCES users(id),
-  weight_kg  DECIMAL NOT NULL,
-  logged_at  TIMESTAMPTZ NOT NULL DEFAULT now()
-);
