@@ -1,4 +1,4 @@
-import { useState, type SubmitEvent } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getPresignedUrl, uploadToS3, submitLift, type LiftType } from "../api/lifts";
@@ -29,7 +29,7 @@ export default function LogLiftPage() {
 
   const isBodyweight = BODYWEIGHT_LIFTS.includes(liftType);
 
-  async function handleSubmit(e: SubmitEvent<HTMLFormElement>) {
+  async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault();
     if (!token) return;
     if (!scaleVideo || !liftVideo) {

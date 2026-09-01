@@ -1,4 +1,4 @@
-import { useState, type SubmitEvent } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { login } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
@@ -14,7 +14,7 @@ export default function LoginPage() {
   // useNavigate lets us redirect programmatically after login.
   const navigate = useNavigate();
 
-  async function handleSubmit(e: SubmitEvent<HTMLFormElement>) {
+  async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault();
     setLoading(true);
     setError(null);

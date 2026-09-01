@@ -1,4 +1,4 @@
-import { useState, type SubmitEvent } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { register } from "../api/auth";
 
@@ -17,7 +17,7 @@ export default function RegisterPage() {
   // don't log the user in; we just show a confirmation message.
   const [success, setSuccess] = useState(false);
 
-  async function handleSubmit(e: SubmitEvent<HTMLFormElement>) {
+  async function handleSubmit(e: { preventDefault(): void }) {
     // Prevent the default browser form submission (which would reload the page).
     e.preventDefault();
     setLoading(true);

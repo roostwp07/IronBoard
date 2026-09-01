@@ -30,7 +30,7 @@ export default function FeedPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  async function handleSubmit(e: SubmitEvent<HTMLFormElement>) {
+  async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault();
     if (!token) return;
     if (!body.trim() && mediaFiles.length === 0) {
