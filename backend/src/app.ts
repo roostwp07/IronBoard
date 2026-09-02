@@ -4,6 +4,7 @@ import { leaderboardRouter } from "./routes/leaderboard.ts";
 import { adminRouter } from "./routes/admin.ts";
 import { liftsRouter } from "./routes/lifts.ts";
 import { postsRouter } from "./routes/posts.ts";
+import { profileRouter } from "./routes/profile.ts";
 
 // Build the Express app but do NOT start listening here. Tests import
 // this `app` and run requests against it in-memory (via supertest),
@@ -32,3 +33,6 @@ app.use("/api/lifts", liftsRouter);
 
 // Posts: /api/posts
 app.use("/api/posts", postsRouter);
+
+// Profile: /api/profile
+app.use("/api/profile", profileRouter);
