@@ -90,14 +90,45 @@ export default function FeedPage() {
             rows={3}
             style={{ resize: "vertical" }}
           />
+
+          {/* Hidden real file input */}
           <input
             type="file"
             accept="image/*,video/*"
             multiple
             ref={fileInputRef}
             onChange={(e) => setMediaFiles(Array.from(e.target.files ?? []))}
+            style={{ display: "none" }}
           />
-          <div>
+
+          {/* Selected file tags */}
+          {mediaFiles.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--gap-xs)" }}>
+              {mediaFiles.map((f, i) => (
+                <span key={i} style={{
+                  fontSize: "var(--text-sm)",
+                  background: "var(--bg-3)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--radius)",
+                  padding: "2px 8px",
+                  color: "var(--text)",
+                }}>
+                  {f.name}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Action row: Attach + Post */}
+          <div style={{ display: "flex", gap: "var(--gap-sm)" }}>
+            <button
+              type="button"
+              className="btn-ghost"
+              onClick={() => fileInputRef.current?.click()}
+              style={{ fontSize: "var(--text-sm)", padding: "5px 12px" }}
+            >
+              Attach
+            </button>
             <button type="submit" disabled={submitting}>
               {submitting ? "Posting…" : "Post"}
             </button>
