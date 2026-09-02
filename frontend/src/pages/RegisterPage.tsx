@@ -3,29 +3,21 @@ import { Link } from "react-router-dom";
 import { register } from "../api/auth";
 
 export default function RegisterPage() {
-  // One state value per form field.
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [gender, setGender] = useState<"male" | "female">("male");
-
-  // Tracks the in-flight request so we can disable the button.
   const [loading, setLoading] = useState(false);
-  // Shown when the backend returns an error (e.g. email already taken).
   const [error, setError] = useState<string | null>(null);
-  // Shown on success — registration requires admin approval, so we
-  // don't log the user in; we just show a confirmation message.
   const [success, setSuccess] = useState(false);
 
   async function handleSubmit(e: { preventDefault(): void }) {
-    // Prevent the default browser form submission (which would reload the page).
     e.preventDefault();
     setLoading(true);
     setError(null);
-
     try {
       await register({ name, email, password, gender });
-      setSuccess(true);  // triggers a re-render, i.e. re-runs RegisterPage() function, by updating state
+      setSuccess(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -33,97 +25,59 @@ export default function RegisterPage() {
     }
   }
 
-  // After successful registration, replace the form with a message.
   if (success) {
     return (
-      <main style={{ maxWidth: 400, margin: "80px auto", padding: "0 16px" }}>
-        <h1>You're on the list</h1>
-        <p>
-          Your account is pending admin approval. You'll be able to log in once
-          it's approved.
-        </p>
-        <Link to="/login">Back to login</Link>
-      </main>
+      <div className="page">
+        <div style={{ width: "min(480px, 90%)", marginLeft: "auto", marginRight: "auto" }}>
+          <h1>You're on the list</h1>
+          <p style={{ marginBottom: "var(--gap-lg)" }}>
+            Your account is pending admin approval. You'll be able to log in once it's approved.
+          </p>
+          <Link to="/login" style={{ textDecoration: "underline" }}>Back to login</Link>
+        </div>
+      </div>
     );
   }
 
   return (
-    <main style={{ maxWidth: 400, margin: "80px auto", padding: "0 16px" }}>
-      <h1>Create account</h1>
-
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        <label>
-          Name
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            autoComplete="name"
-            style={{ display: "block", width: "100%", marginTop: 4 }}
-          />
-        </label>
-
-        <label>
-          Email
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="email"
-            style={{ display: "block", width: "100%", marginTop: 4 }}
-          />
-        </label>
-
-        <label>
-          Password
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={8}
-            autoComplete="new-password"
-            style={{ display: "block", width: "100%", marginTop: 4 }}
-          />
-        </label>
-
-        <fieldset style={{ border: "none", padding: 0, margin: 0 }}>
-          <legend>Gender</legend>
-          <label style={{ marginRight: 16 }}>
-            <input
-              type="radio"
-              name="gender"
-              value="male"
-              checked={gender === "male"}
-              onChange={() => setGender("male")}
-            />{" "}
-            Male
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="gender"
-              value="female"
-              checked={gender === "female"}
-              onChange={() => setGender("female")}
-            />{" "}
-            Female
-          </label>
-        </fieldset>
-
-        {/* Show backend error inline so the user knows what went wrong */}
-        {error && <p style={{ color: "red", margin: 0 }}>{error}</p>}
-
-        <button type="submit" disabled={loading}>
-          {loading ? "Registering…" : "Register"}
-        </button>
-      </form>
-
-      <p style={{ marginTop: 16 }}>
-        Already have an account? <Link to="/login">Log in</Link>
-      </p>
-    </main>
+    <div className="page">
+      <div style={{ width: "min(480px, 90%)", margin: "0 auto" }}>
+        <h1>Create account</h1>
+        <form onSubmit={handleSubmit} className="form-stack">
+          <div className="form-row">
+            <label htmlFor="name">Name</label>
+            <input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} required autoComplete="name" />
+          </div>
+          <div className="form-row">
+            <label htmlFor="email">Email</label>
+            <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+          </div>
+          <div className="form-row">
+            <label htmlFor="password">Password</label>
+            <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} autoComplete="new-password" />
+          </div>
+          <fieldset>
+            <legend>Gender</legend>
+            <div style={{ display: "flex", gap: "var(--gap-lg)", marginTop: "var(--gap-xs)" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "var(--gap-xs)", marginBottom: 0 }}>
+                <input type="radio" name="gender" value="male" checked={gender === "male"} onChange={() => setGender("male")} />
+                Male
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: "var(--gap-xs)", marginBottom: 0 }}>
+                <input type="radio" name="gender" value="female" checked={gender === "female"} onChange={() => setGender("female")} />
+                Female
+              </label>
+            </div>
+          </fieldset>
+          {error && <p className="error-msg">{error}</p>}
+          <button type="submit" disabled={loading}>
+            {loading ? "Registering…" : "Register"}
+          </button>
+        </form>
+        <p style={{ marginTop: "var(--gap-lg)", fontSize: "var(--text-sm)", color: "var(--text)" }}>
+          Already have an account? <Link to="/login">Log in</Link>
+        </p>
+      </div>
+    </div>
   );
 }

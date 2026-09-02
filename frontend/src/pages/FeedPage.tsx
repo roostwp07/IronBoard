@@ -12,12 +12,9 @@ import { S3_BASE_URL } from "../config";
 
 export default function FeedPage() {
   const { user, token } = useAuth();
-
   const [posts, setPosts] = useState<Post[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // New post form state.
   const [body, setBody] = useState("");
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -37,12 +34,9 @@ export default function FeedPage() {
       setError("Post must have text or at least one file.");
       return;
     }
-
     setSubmitting(true);
     setError(null);
-
     try {
-      // Upload all media files to S3 in parallel.
       const mediaKeys = await Promise.all(
         mediaFiles.map(async (file) => {
           const { uploadUrl, key } = await getPostPresignedUrl(token, file.type);
@@ -50,21 +44,14 @@ export default function FeedPage() {
           return key;
         })
       );
-
       const newPost = await createPost(token, {
         body: body.trim() || undefined,
         media_keys: mediaKeys,
       });
-
-      // Prepend the new post with full user info for immediate display.
       setPosts((prev) => [
-        { ...newPost, user_name: user!.name, user_id: user!.id, media: mediaKeys.map(
-          (key) => `${S3_BASE_URL}/${key}`
-        )},
+        { ...newPost, user_name: user!.name, user_id: user!.id, media: mediaKeys.map((key) => `${S3_BASE_URL}/${key}`) },
         ...prev,
       ]);
-
-      // Reset form.
       setBody("");
       setMediaFiles([]);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -85,26 +72,23 @@ export default function FeedPage() {
     }
   }
 
-  if (loading) return <main style={{ padding: 32 }}><p>Loading…</p></main>;
+  if (loading) return <div className="page"><p className="muted">Loading…</p></div>;
 
   return (
-    <main style={{ maxWidth: 600, margin: "0 auto", padding: 32 }}>
+    <div className="page" style={{ maxWidth: 640 }}>
       <h1>Feed</h1>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {error && <p className="error-msg" style={{ marginBottom: "var(--gap-md)" }}>{error}</p>}
 
       {/* ── New post form (members only) ── */}
       {user && (
-        <form
-          onSubmit={handleSubmit}
-          style={{ marginBottom: 32, display: "flex", flexDirection: "column", gap: 10 }}
-        >
+        <form onSubmit={handleSubmit} style={{ marginBottom: "var(--gap-xl)", display: "flex", flexDirection: "column", gap: "var(--gap-sm)" }}>
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
             placeholder="What's on your mind?"
             rows={3}
-            style={{ width: "100%", resize: "vertical" }}
+            style={{ resize: "vertical" }}
           />
           <input
             type="file"
@@ -113,59 +97,57 @@ export default function FeedPage() {
             ref={fileInputRef}
             onChange={(e) => setMediaFiles(Array.from(e.target.files ?? []))}
           />
-          <button type="submit" disabled={submitting} style={{ alignSelf: "flex-start" }}>
-            {submitting ? "Posting…" : "Post"}
-          </button>
+          <div>
+            <button type="submit" disabled={submitting}>
+              {submitting ? "Posting…" : "Post"}
+            </button>
+          </div>
         </form>
       )}
 
       {/* ── Posts ── */}
       {posts.length === 0 ? (
-        <p>No posts yet.</p>
+        <p className="muted">No posts yet.</p>
       ) : (
-        posts.map((post) => (
-          <article
-            key={post.id}
-            style={{ borderBottom: "1px solid #eee", paddingBottom: 20, marginBottom: 20 }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-              <strong>{post.user_name}</strong>
-              <span style={{ color: "#888", fontSize: 13 }}>
-                {new Date(post.created_at).toLocaleDateString()}
-              </span>
-            </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--gap-lg)" }}>
+          {posts.map((post) => (
+            <article key={post.id} style={{
+              background: "var(--bg-2)",
+              border: "1px solid var(--border)",
+              borderRadius: "var(--radius)",
+              padding: "var(--gap-md)",
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "var(--gap-sm)" }}>
+                <span style={{ fontSize: "var(--text-sm)", fontWeight: 500, color: "var(--text-strong)" }}>{post.user_name}</span>
+                <span className="muted">{new Date(post.created_at).toLocaleDateString()}</span>
+              </div>
 
-            {post.body && <p style={{ margin: "0 0 10px" }}>{post.body}</p>}
+              {post.body && (
+                <p style={{ color: "var(--text-strong)", marginBottom: post.media.length > 0 ? "var(--gap-sm)" : 0 }}>
+                  {post.body}
+                </p>
+              )}
 
-            {/* Render images inline, link to videos */}
-            {post.media.map((url, i) => {
-              const isVideo = url.match(/\.(mp4|mov|webm|avi)$/i);
-              return isVideo ? (
-                <a key={i} href={url} target="_blank" rel="noreferrer" style={{ display: "block", marginBottom: 6 }}>
-                  Video {i + 1}
-                </a>
-              ) : (
-                <img
-                  key={i}
-                  src={url}
-                  alt=""
-                  style={{ maxWidth: "100%", borderRadius: 8, marginBottom: 6, display: "block" }}
-                />
-              );
-            })}
+              {post.media.map((url, i) => {
+                const isVideo = url.match(/\.(mp4|mov|webm|avi)$/i);
+                return isVideo ? (
+                  <a key={i} href={url} target="_blank" rel="noreferrer" style={{ display: "block", fontSize: "var(--text-sm)", marginBottom: "var(--gap-xs)" }}>
+                    Video {i + 1} ↗
+                  </a>
+                ) : (
+                  <img key={i} src={url} alt="" style={{ maxWidth: "100%", borderRadius: "var(--radius)", marginBottom: "var(--gap-xs)", display: "block" }} />
+                );
+              })}
 
-            {/* Show delete button for own posts or if admin */}
-            {user && (user.id === post.user_id || user.role === "admin") && (
-              <button
-                onClick={() => handleDelete(post.id)}
-                style={{ marginTop: 6, fontSize: 12, color: "red", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-              >
-                Delete
-              </button>
-            )}
-          </article>
-        ))
+              {user && (user.id === post.user_id || user.role === "admin") && (
+                <button className="btn-danger" onClick={() => handleDelete(post.id)} style={{ marginTop: "var(--gap-sm)" }}>
+                  Delete
+                </button>
+              )}
+            </article>
+          ))}
+        </div>
       )}
-    </main>
+    </div>
   );
 }
