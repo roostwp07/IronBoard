@@ -1,6 +1,7 @@
 import { Router } from "express";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { randomUUID } from "crypto";
 import { query } from "../db.ts";
 import { requireAuth } from "../middleware/auth.ts";
@@ -8,6 +9,15 @@ import { config } from "../config.ts";
 import { s3 } from "../s3.ts";
 
 export const profileRouter = Router();
+
+function keyFromUrl(url: string): string {
+  return new URL(url).pathname.slice(1);
+}
+
+async function presignedGetUrl(key: string): Promise<string> {
+  const command = new GetObjectCommand({ Bucket: config.s3Bucket, Key: key });
+  return getSignedUrl(s3, command, { expiresIn: 3600 });
+}
 
 // GET /api/profile
 profileRouter.get("/", requireAuth, async (req, res) => {
@@ -21,7 +31,17 @@ profileRouter.get("/", requireAuth, async (req, res) => {
        ORDER BY lift_type, weight_kg DESC NULLS LAST, reps DESC NULLS LAST`,
       [req.user!.id]
     );
-    return res.json({ user: req.user, lifts: result.rows });
+
+    // Sign video URLs so they're accessible from the browser.
+    const lifts = await Promise.all(
+      result.rows.map(async (row) => ({
+        ...row,
+        scale_video_url: await presignedGetUrl(keyFromUrl(row.scale_video_url)),
+        lift_video_url: await presignedGetUrl(keyFromUrl(row.lift_video_url)),
+      }))
+    );
+
+    return res.json({ user: req.user, lifts });
   } catch (err) {
     console.error("Profile error:", err);
     return res.status(500).json({ error: "Internal server error" });

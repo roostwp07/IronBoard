@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "crypto";
 import { query } from "../db.ts";
@@ -9,6 +9,19 @@ import { config } from "../config.ts";
 import { s3 } from "../s3.ts";
 
 export const liftsRouter = Router();
+
+// Extracts the S3 key from a full S3 URL.
+// e.g. "https://bucket.s3.region.amazonaws.com/lifts/uuid" → "lifts/uuid"
+function keyFromUrl(url: string): string {
+  const u = new URL(url);
+  return u.pathname.slice(1); // remove leading "/"
+}
+
+// Generates a presigned GET URL valid for 1 hour.
+async function presignedGetUrl(key: string): Promise<string> {
+  const command = new GetObjectCommand({ Bucket: config.s3Bucket, Key: key });
+  return getSignedUrl(s3, command, { expiresIn: 3600 });
+}
 
 // POST /api/lifts/presigned-url
 // Member requests a presigned S3 URL to upload one video directly.
@@ -91,6 +104,8 @@ liftsRouter.post("/submit", requireAuth, async (req, res) => {
 
 // GET /api/lifts/pending
 // Admin sees all lift submissions awaiting review.
+// Video URLs are returned as presigned GET URLs (1 hour expiry) since
+// the S3 bucket is private.
 liftsRouter.get("/pending", requireAuth, requireAdmin, async (_req, res) => {
   try {
     const result = await query(
@@ -103,7 +118,17 @@ liftsRouter.get("/pending", requireAuth, requireAdmin, async (_req, res) => {
        WHERE ls.status = 'pending'
        ORDER BY ls.created_at ASC`
     );
-    return res.json({ submissions: result.rows });
+
+    // Sign each video URL in parallel.
+    const submissions = await Promise.all(
+      result.rows.map(async (row) => ({
+        ...row,
+        scale_video_url: await presignedGetUrl(keyFromUrl(row.scale_video_url)),
+        lift_video_url: await presignedGetUrl(keyFromUrl(row.lift_video_url)),
+      }))
+    );
+
+    return res.json({ submissions });
   } catch (err) {
     console.error("Get pending lifts error:", err);
     return res.status(500).json({ error: "Internal server error" });
