@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
              CHECK (role IN ('member', 'admin')),
   status     TEXT NOT NULL DEFAULT 'pending'
              CHECK (status IN ('pending', 'active', 'suspended')),
+  avatar_url TEXT,                       -- S3 URL, null until user uploads a photo
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

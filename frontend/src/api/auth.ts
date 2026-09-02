@@ -9,6 +9,7 @@ export interface User {
   gender: string;
   role: "member" | "admin";
   status: string;
+  avatar_url: string | null;
 }
 
 // --- register ---

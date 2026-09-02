@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import Avatar from "./Avatar";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -45,8 +46,8 @@ export default function Navbar() {
       <div style={{ display: "flex", alignItems: "center", gap: "var(--gap-md)" }}>
         {user ? (
           <>
-            <NavLink to="/profile" style={{ fontSize: "var(--text-base)", color: "var(--text)" }}>
-              {user.name}
+            <NavLink to="/profile" style={{ display: "flex", alignItems: "center" }}>
+              <Avatar name={user.name} avatarUrl={user.avatar_url} size={30} />
             </NavLink>
             <button className="btn-ghost" onClick={handleLogout} style={{ fontSize: "var(--text-base)", padding: "4px 10px" }}>
               Log out

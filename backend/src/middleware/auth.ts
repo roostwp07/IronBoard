@@ -12,6 +12,7 @@ export interface AuthUser {
   gender: string;
   role: "member" | "admin";
   status: string;
+  avatar_url: string | null;
 }
 
 // Tell TypeScript that req.user may exist once this middleware runs.
@@ -47,7 +48,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   // 3. Look up fresh user data — a token can outlive an account change
   //    (e.g. the user was suspended after the token was issued).
   const result = await query(
-    `SELECT id, email, name, gender, role, status FROM users WHERE id = $1`,
+    `SELECT id, email, name, gender, role, status, avatar_url FROM users WHERE id = $1`,
     [payload.userId]
   );
   const user = result.rows[0];

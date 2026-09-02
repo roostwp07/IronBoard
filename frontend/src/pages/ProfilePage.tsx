@@ -1,13 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { getProfile, type ApprovedLift, type ProfileData } from "../api/profile";
+import { getProfile, getAvatarPresignedUrl, saveAvatar, type ApprovedLift, type ProfileData } from "../api/profile";
+import { uploadToS3 } from "../api/posts";
+import Avatar from "../components/Avatar";
 
 const LIFT_ORDER = ["squat", "bench", "deadlift", "ohp", "pullups", "chinups", "dips"];
 
 export default function ProfilePage() {
-  const { token } = useAuth();
+  const { token, user, setSession } = useAuth();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!token) return;
@@ -16,19 +20,37 @@ export default function ProfilePage() {
       .catch((err) => setError(err.message));
   }, [token]);
 
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !token || !user) return;
+    setUploading(true);
+    setError(null);
+    try {
+      const { uploadUrl, key } = await getAvatarPresignedUrl(token, file.type);
+      await uploadToS3(uploadUrl, file);
+      const avatarUrl = await saveAvatar(token, key);
+      // Update context so the navbar avatar refreshes immediately.
+      setSession(token, { ...user, avatar_url: avatarUrl });
+      setProfile((prev) => prev ? { ...prev, user: { ...prev.user, avatar_url: avatarUrl } } : prev);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
   if (error) return <div className="page"><p className="error-msg">{error}</p></div>;
   if (!profile) return <div className="page"><p className="muted">Loading…</p></div>;
 
-  const { user, lifts } = profile;
+  const { user: profileUser, lifts } = profile;
 
-  // Group lifts by lift_type.
   const byType: Record<string, ApprovedLift[]> = {};
   for (const lift of lifts) {
     if (!byType[lift.lift_type]) byType[lift.lift_type] = [];
     byType[lift.lift_type].push(lift);
   }
 
-  // PR = first entry per lift type (already sorted best-first by backend).
   const prs = LIFT_ORDER
     .filter((lt) => byType[lt]?.length > 0)
     .map((lt) => ({ lift_type: lt, best: byType[lt][0] }));
@@ -36,9 +58,25 @@ export default function ProfilePage() {
   return (
     <div className="page">
       {/* ── Header ── */}
-      <div style={{ marginBottom: "var(--gap-xl)" }}>
-        <h1 style={{ marginBottom: "var(--gap-xs)" }}>{user.name}</h1>
-        <p className="muted" style={{ textTransform: "capitalize" }}>{user.gender}</p>
+      <div style={{ display: "flex", alignItems: "center", gap: "var(--gap-xl)", marginBottom: "var(--gap-xl)", paddingTop: "var(--gap-xl)" }}>
+        <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--gap-xs)" }}>
+          <Avatar name={profileUser.name} avatarUrl={profileUser.avatar_url} size={96} />
+          <span className="muted" style={{ fontSize: 11, cursor: "pointer" }}>
+            {uploading ? "Uploading…" : "Upload photo"}
+          </span>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleAvatarChange}
+            style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer" }}
+            title="Upload photo"
+          />
+        </div>
+        <div>
+          <h1 style={{ fontSize: 28, marginBottom: "var(--gap-xs)" }}>{profileUser.name}</h1>
+          <p className="muted" style={{ textTransform: "capitalize" }}>{profileUser.gender}</p>
+        </div>
       </div>
 
       {/* ── PRs ── */}
@@ -47,7 +85,7 @@ export default function ProfilePage() {
         {prs.length === 0 ? (
           <p className="muted">No approved lifts yet.</p>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "var(--gap-sm)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "var(--gap-md)" }}>
             {prs.map(({ lift_type, best }) => (
               <div key={lift_type} style={{
                 background: "var(--bg-2)",
@@ -66,7 +104,7 @@ export default function ProfilePage() {
         )}
       </section>
 
-      {/* ── Full lift history ── */}
+      {/* ── Lift history ── */}
       <section>
         <h2>Lift history</h2>
         {lifts.length === 0 ? (

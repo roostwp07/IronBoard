@@ -24,3 +24,28 @@ export async function getProfile(token: string): Promise<ProfileData> {
   if (!res.ok) throw new Error(json.error ?? "Failed to load profile");
   return json;
 }
+
+export async function getAvatarPresignedUrl(
+  token: string,
+  contentType: string
+): Promise<{ uploadUrl: string; key: string }> {
+  const res = await fetch("/api/profile/avatar/presigned-url", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ contentType }),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error ?? "Failed to get upload URL");
+  return json;
+}
+
+export async function saveAvatar(token: string, key: string): Promise<string> {
+  const res = await fetch("/api/profile/avatar", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ key }),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error ?? "Failed to save avatar");
+  return json.avatar_url;
+}
