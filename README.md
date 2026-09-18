@@ -1,30 +1,7 @@
 # IronBoard
 
-## Project Structure
+A full-stack web app built for members of a local powerlifting gym. The core feature is a digital strength leaderboard that mirrors the gym's physical blackboards, ranking lifters by gender and weight class across the squat, bench, deadlift, OHP, and bodyweight movements. Supporting features include lift submissions with video proof and admin approval, a social feed, and member management tools for the gym owner.
 
-```
-IronBoard/
-├── backend/                        
-│   ├── src/                        # backend source code
-│   │   ├── index.ts                
-│   │   ├── app.ts                  
-│   │   ├── config.ts               # reads/validates env config (JWT secret, etc)
-│   │   ├── db.ts                   # shared Postgres connection pool + query() helper
-│   │   ├── routes/
-│   │   │   ├── auth.ts             # register, login, me endpoints
-│   │   │   └── auth.test.ts        # tests for the auth endpoints
-│   │   └── middleware/
-│   │       ├── auth.ts             # requireAuth (JWT + active check), requireAdmin
-│   │       └── auth.test.ts        # tests for the auth middleware
-│   ├── schema.sql                  # SQL schema
-│   ├── tsconfig.json               
-│   ├── package.json                
-│   ├── package-lock.json           
-│   ├── .env                        
-│   └── .gitignore
-│
-├── frontend/                       
-│   └── src/                        # frontend source code
-│
-└── README.md
-```
+Built with React, Node.js/Express, and PostgreSQL. Authentication uses JWT with an admin approval flow where new members start as `pending` and must be approved before they can log in. Lift submissions require two videos (scale + lift) uploaded directly to S3 via presigned URLs, reviewed by an admin before appearing on the leaderboard. Containerized with Docker, deployed to AWS EC2 via ECR, with a CI/CD pipeline in GitHub Actions that runs tests, builds images, and deploys on every push to `main`.
+
+**Stack:** React · Node.js · Express · PostgreSQL · AWS (RDS, S3, EC2, ECR) · Docker · GitHub Actions
